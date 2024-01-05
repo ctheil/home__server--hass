@@ -1,0 +1,121 @@
+homeassistant:
+  name: Brickhouse
+  time_zone: "America/Denver"
+  allowlist_external_dirs: 
+    - "/"
+    - "/opt"
+panel_iframe:
+  portainer:
+    title: "Portainer"
+    url: "http://192.168.0.41:9000/#/containers"
+    icon: mdi:docker
+    require_admin: true
+# Loads default set of integrations. Do not remove.
+default_config:
+
+
+# Text-to-speech
+tts:
+  - platform: google_translate
+
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+
+# LOGGING
+logger:
+  default: warning
+  logs:
+    homeassistant.components.rest: debug
+
+frontend:
+  themes: !include_dir_merge_named themes
+
+
+
+sensor:
+  # - platform: systemmonitor
+  #   resources:
+  #     - type: disk_free
+  #     - type: disk_use_percent
+  #       arg: /
+  #     - type: memory_use_percent
+  #     - type: swap_use_percent
+  #     - type: load_1m
+  #     - type: load_15m
+  #     - type: network_in
+  #       arg: eth0
+  #     - type: network_out
+  #       arg: eth0
+  #     - type: throughput_network_in
+  #       arg: eth0
+  #     - type: throughput_network_out
+  #       arg: eth0
+  #     - type: packets_in
+  #       arg: eth0
+  #     - type: packets_out
+  #       arg: eth0
+  #     - type: ipv4_address
+  #       arg: eth0
+  #     - type: ipv6_address
+  #       arg: eth0
+  #     - type: processor_use
+  #     - type: processor_temperature
+  #     - type: last_boot
+  - platform: time_date
+    display_options:
+      - "time"
+      - "date"
+      - "date_time"
+  - platform: template
+    sensors: 
+      light_brightness:
+        friendly_name: 'Light Brightness'
+        value_template: >
+          {% if (now().hour >= 23) or (now().hour <= 7) %}
+            50
+          {% else %}
+            100
+          {% endif %}
+        
+input_select: 
+  minimalist_ui_switch:
+    name: Select popup/view
+    options:
+      - light 1
+      - light 2
+      - desk
+      - bed
+
+
+input_boolean: 
+  away:
+    name: Away From Home
+    initial: off
+
+
+circadian_lighting:
+
+switch:
+  - platform: circadian_lighting
+    name: Bedroom Circadium
+    disable_brightness_adjust: true
+    lights_ct: 
+      - light.bedside_lamp
+      - light.bed_strip
+# ROKU
+  - platform: rest
+    unique_id: "homeserver_roku-switch-1"
+    name: "roku_dark_mode"
+    resource: http://homeserver:8081/roku/state
+    body_on: '{"state":"dark"}'
+    body_off: '{"state":"light"}'
+    is_on_template: "{{value_json.state == 'dark'}}"
+    headers:
+      Content-Type: application/json
+
+http:
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 192.168.0.41
+    - 172.19.0.3

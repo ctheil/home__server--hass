@@ -1,0 +1,1011 @@
+- id: '1687475282107'
+  alias: Turn subwoffer off at night
+  description: ''
+  trigger:
+  - platform: time
+    at: '12:00:00'
+  condition: []
+  action:
+  - type: turn_off
+    device_id: baa3d83ed5966ab2aec30d0d08227e45
+    entity_id: switch.subwoofer
+    domain: switch
+  mode: single
+- id: '1688011819022'
+  alias: Mac Sleep => Desk
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - input_boolean.mac_sleep_state
+  condition: []
+  action:
+  - if:
+    - condition: state
+      entity_id: input_boolean.mac_sleep_state
+      state: 'on'
+    then:
+    - service: light.turn_off
+      data:
+        transition: 5
+      target:
+        entity_id: light.desk_strip
+      enabled: false
+    - service: switch.turn_off
+      data: {}
+      target:
+        entity_id: switch.desk_switches
+    else:
+    - service: light.turn_on
+      data:
+        transition: 5
+        color_temp: 500
+        brightness_pct: 100
+      target:
+        entity_id: light.desk_strip
+      enabled: false
+    - service: switch.turn_on
+      data: {}
+      target:
+        entity_id: switch.desk_switches
+  mode: single
+- id: '1688054968853'
+  alias: Tv State
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - media_player.bedroom_tv
+    from:
+    to:
+  condition:
+  - condition: state
+    entity_id: input_boolean.sleep
+    state: 'off'
+  - condition: state
+    entity_id: input_boolean.override
+    state: 'off'
+  action:
+  - if:
+    - condition: state
+      entity_id: media_player.bedroom_tv
+      state: standby
+    then:
+    - service: switch.turn_off
+      data: {}
+      target:
+        device_id: baa3d83ed5966ab2aec30d0d08227e45
+    - service: input_boolean.turn_off
+      data: {}
+      target:
+        entity_id: input_boolean.override
+    else:
+    - service: switch.turn_on
+      data: {}
+      target:
+        device_id: baa3d83ed5966ab2aec30d0d08227e45
+  - if:
+    - condition: and
+      conditions:
+      - condition: state
+        entity_id: input_boolean.override
+        state: 'off'
+      - condition: state
+        entity_id: media_player.bedroom_tv
+        state: playing
+    then:
+    - service: light.turn_off
+      data:
+        transition: 10
+      target:
+        entity_id:
+        - light.bedroom_lights
+        - light.bathroom_switch_light
+    - service: switch.turn_off
+      data: {}
+      target:
+        device_id:
+        - e87f92dcfa2e106bb780896c68e1250f
+        - feb2d2a8999a3801b67904ed81a1d4dc
+    - service: light.turn_on
+      data:
+        brightness_pct: 50
+      target:
+        entity_id: light.tv_lights
+    else:
+    - service: light.turn_on
+      data:
+        brightness_pct: 50
+        transition: 5
+      target:
+        device_id: 62554d34919f5f595cbe6557b5d8c53e
+    - service: light.turn_on
+      data:
+        brightness_pct: 100
+        transition: 5
+      target:
+        device_id: 1a88d127cc54e88d300d124f3bd7b1dd
+  mode: single
+- id: '1689004932877'
+  alias: bedtime_strip_motion
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - binary_sensor.lumi_1
+    from: 'off'
+    to: 'on'
+  condition:
+  - condition: sun
+    before: sunrise
+    after: sunset
+    enabled: true
+  action:
+  - service: light.turn_on
+    data:
+      transition: 3
+      brightness_pct: '{{states(''sensor.light_brightness'') }}'
+    target:
+      entity_id: light.bed_strip
+  - wait_for_trigger:
+    - platform: state
+      entity_id:
+      - binary_sensor.lumi_1
+      from: 'on'
+      to: 'off'
+      for:
+        hours: 0
+        minutes: 0
+        seconds: 30
+  - service: light.turn_off
+    data:
+      transition: 10
+    target:
+      device_id:
+      - 1a88d127cc54e88d300d124f3bd7b1dd
+  mode: single
+- id: '1689047016022'
+  alias: Goodnight
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - input_boolean.sleep
+    from: 'off'
+    to: 'on'
+  condition: []
+  action:
+  - service: light.turn_off
+    data:
+      transition: 15
+    target:
+      area_id: bedroom
+      entity_id: light.bathroom_switch_light
+    enabled: false
+  - service: switch.turn_off
+    data: {}
+    target:
+      device_id:
+      - baa3d83ed5966ab2aec30d0d08227e45
+      - feb2d2a8999a3801b67904ed81a1d4dc
+      - e87f92dcfa2e106bb780896c68e1250f
+    enabled: false
+  - service: switch.turn_on
+    data: {}
+    target:
+      entity_id: switch.roku_dark_mode
+    enabled: false
+  - type: turn_off
+    device_id: 95cbc22a29170ecf5eb4d00abb0a6730
+    entity_id: switch.classic300s_display
+    domain: switch
+    enabled: false
+  - service: scene.turn_on
+    data: {}
+    target:
+      entity_id: scene.goodnight
+  mode: single
+- id: '1689206174747'
+  alias: M_bedroom
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - binary_sensor.bedroom_presence
+    to: 'on'
+  - platform: state
+    entity_id:
+    - binary_sensor.presence_sensor_fp2_2585_presence_sensor_1
+    to: 'on'
+    id: motion
+  - platform: state
+    entity_id:
+    - binary_sensor.presence_sensor_fp2_2585_presence_sensor_1
+    to: 'off'
+    id: clear
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 0
+  condition:
+  - condition: state
+    entity_id: input_boolean.sleep
+    state: 'off'
+  - condition: state
+    entity_id: media_player.bedroom_tv
+    state: standby
+    enabled: false
+  - condition: state
+    entity_id: input_boolean.mac_sleep_state
+    state: 'on'
+    enabled: false
+  action:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: motion
+      sequence:
+      - service: light.turn_on
+        data:
+          transition: 5
+          brightness_pct: 100
+        target:
+          entity_id: light.bedroom_lights
+    - conditions:
+      - condition: trigger
+        id: clear
+      sequence:
+      - service: light.turn_off
+        data:
+          transition: 10
+        target:
+          entity_id: light.bedroom_lights
+  mode: single
+- id: '1689455359677'
+  alias: Hue Switch
+  description: ''
+  use_blueprint:
+    path: dustins/zha-philips-hue-v2-smart-dimmer-switch-and-remote-rwl022.yaml
+    input:
+      zha_device: 12731406f98a1e9d9d417fd32157e7a7
+      Power_Press:
+      - service: light.turn_on
+        data: {}
+        target:
+          entity_id: light.bedroom_lights
+      Hue_Press:
+      - service: light.turn_off
+        data: {}
+        target:
+          entity_id: light.bedroom_lights
+      Up_Press:
+      - service: light.turn_on
+        data:
+          brightness_step_pct: 25
+        target:
+          entity_id: light.bedroom_lights
+      Down_Press:
+      - service: light.turn_on
+        data:
+          brightness_step_pct: -25
+          transition: 1
+        target:
+          entity_id: light.bedroom_lights
+      Power_Press2x:
+      - service: light.turn_on
+        data: {}
+        target:
+          entity_id: light.bedside_lamp
+      Power_Press3x:
+      - service: light.turn_on
+        data: {}
+        target:
+          entity_id:
+          - light.overhead_bed
+          - light.overhead_lights
+      Power_HoldPress:
+      - service: input_boolean.turn_on
+        data: {}
+        target:
+          entity_id: input_boolean.sleep
+      Hue_HoldPress:
+      - service: input_boolean.turn_off
+        data: {}
+        target:
+          entity_id: input_boolean.sleep
+- id: '1700595148393'
+  alias: kitchen-motion
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - binary_sensor.lumi_lumi_motion_ac02_motion
+    to: 'on'
+    id: motion
+  - platform: state
+    entity_id:
+    - binary_sensor.lumi_lumi_motion_ac02_motion
+    to: 'off'
+    id: clear
+    for:
+      hours: 0
+      minutes: 2
+      seconds: 0
+  condition: []
+  action:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: motion
+      sequence:
+      - service: light.turn_on
+        data:
+          color_temp: 395
+        target:
+          entity_id: light.kitchen_sink
+    - conditions:
+      - condition: trigger
+        id: clear
+      sequence:
+      - service: light.turn_off
+        data: {}
+        target:
+          entity_id: light.kitchen_sink
+  mode: single
+- id: '1700895919434'
+  alias: Good morning
+  description: ''
+  trigger:
+  - platform: time
+    at: 09:00:00
+  condition:
+  - condition: state
+    entity_id: input_boolean.sleep_in
+    state: 'off'
+  action:
+  - service: input_boolean.turn_off
+    data: {}
+    target:
+      entity_id: input_boolean.sleep
+  mode: single
+- id: '1700896024857'
+  alias: sun-blinds
+  description: ''
+  trigger:
+  - platform: sun
+    event: sunrise
+    offset: 0
+    id: rise
+  - platform: sun
+    event: sunset
+    offset: 0
+    id: set
+  condition: []
+  action:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: rise
+      - condition: state
+        entity_id: input_boolean.sleep_in
+        state: 'off'
+      sequence:
+      - service: cover.open_cover
+        data: {}
+        target:
+          entity_id: cover.blinds_1_cover
+    - conditions:
+      - condition: trigger
+        id: set
+      sequence:
+      - service: cover.close_cover
+        data: {}
+        target:
+          entity_id: cover.blinds_1_cover
+  mode: single
+- id: '1701368810194'
+  alias: mini-tab_sleep-screen
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - input_boolean.sleep
+    to: 'on'
+    id: 'on'
+  - platform: state
+    entity_id:
+    - input_boolean.sleep
+    to: 'off'
+    id: 'off'
+  condition: []
+  action:
+  - device_id: 5b99392a870466d35d15a8cee46719ae
+    domain: number
+    entity_id: number.rk3326_screen_off_timer
+    type: set_value
+    value: 3
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: 'on'
+      sequence:
+      - device_id: 5b99392a870466d35d15a8cee46719ae
+        domain: number
+        entity_id: number.rk3326_screen_off_timer
+        type: set_value
+        value: 10
+      - device_id: 5b99392a870466d35d15a8cee46719ae
+        domain: number
+        entity_id: number.rk3326_screen_brightness
+        type: set_value
+        value: 1
+    - conditions:
+      - condition: trigger
+        id: 'off'
+      sequence:
+      - device_id: 5b99392a870466d35d15a8cee46719ae
+        domain: number
+        entity_id: number.rk3326_screen_off_timer
+        type: set_value
+        value: 20
+      - device_id: 5b99392a870466d35d15a8cee46719ae
+        domain: number
+        entity_id: number.rk3326_screen_brightness
+        type: set_value
+        value: 100
+  mode: single
+- id: '1701476915005'
+  alias: Dinner
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - input_boolean.dinner
+    to: 'on'
+    id: 'on'
+  - platform: state
+    entity_id:
+    - input_boolean.dinner
+    to: 'off'
+    id: 'off'
+  condition: []
+  action:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: 'on'
+      sequence:
+      - service: light.turn_on
+        data:
+          brightness_pct: 100
+        target:
+          entity_id: light.tv_lights
+      - service: light.turn_off
+        data: {}
+        target:
+          entity_id:
+          - light.bedside_lamp
+          - light.signify_netherlands_b_v_lcl001_light
+      - service: input_boolean.turn_on
+        data: {}
+        target:
+          entity_id: input_boolean.override
+    - conditions:
+      - condition: trigger
+        id: 'off'
+      sequence:
+      - service: light.turn_on
+        data:
+          brightness_pct: 50
+        target:
+          entity_id: light.tv_lights
+      - service: input_boolean.turn_off
+        data: {}
+        target:
+          entity_id: input_boolean.override
+  mode: single
+- id: '1701973848556'
+  alias: M_bathroom
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - binary_sensor.bathroom_presence
+    id: motion
+    to: 'on'
+  - platform: state
+    entity_id:
+    - binary_sensor.lumi_lumi_motion_ac02_motion_2
+    id: daytime_clear
+    to: 'off'
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+    enabled: false
+  - platform: state
+    entity_id:
+    - binary_sensor.lumi_lumi_motion_ac02_motion_2
+    id: nighttime_clear
+    to: 'off'
+    for:
+      hours: 0
+      minutes: 1
+      seconds: 0
+    enabled: false
+  - platform: state
+    entity_id:
+    - binary_sensor.fp2_bathrroom
+    to: 'off'
+    id: clear
+  condition: []
+  action:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: motion
+      - condition: state
+        entity_id: input_boolean.sleep
+        state: 'off'
+      sequence:
+      - service: light.turn_on
+        data: {}
+        target:
+          entity_id: light.bathroom_switch_light
+    - conditions:
+      - condition: trigger
+        id: clear
+      sequence:
+      - service: light.turn_off
+        data: {}
+        target:
+          entity_id: light.bathroom_switch_light
+  mode: single
+- id: '1702492440500'
+  alias: tab-battery_above
+  description: ''
+  trigger:
+  - platform: numeric_state
+    entity_id: sensor.galaxy_tab_a7_lite_battery
+    above: 80
+  condition: []
+  action:
+  - service: switch.turn_off
+    data: {}
+    target:
+      entity_id: switch.tablet
+  mode: single
+- id: '1702492679067'
+  alias: tab-battery_below
+  description: ''
+  trigger:
+  - platform: numeric_state
+    entity_id: sensor.galaxy_tab_a7_lite_battery
+    below: 20
+  condition: []
+  action:
+  - service: switch.turn_on
+    data: {}
+    target:
+      entity_id: switch.tablet
+  mode: single
+- id: '1703619495923'
+  alias: humidity
+  description: ''
+  trigger:
+  - platform: numeric_state
+    entity_id: sensor.lumi_lumi_weather_humidity
+    id: below
+    below: 60
+  - platform: numeric_state
+    entity_id: sensor.lumi_lumi_weather_humidity
+    id: above
+    above: 65
+  condition: []
+  action:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: below
+      sequence:
+      - service: humidifier.turn_on
+        data: {}
+        target:
+          entity_id: humidifier.classic300s
+      - device_id: 95cbc22a29170ecf5eb4d00abb0a6730
+        domain: humidifier
+        entity_id: humidifier.classic300s
+        type: set_mode
+        mode: normal
+    - conditions:
+      - condition: trigger
+        id: above
+      sequence:
+      - service: humidifier.turn_off
+        data: {}
+        target:
+          entity_id: humidifier.classic300s
+  mode: single
+- id: '1703815056796'
+  alias: SLEEP-STATE
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - input_boolean.sleep
+    to: 'off'
+    id: 'off'
+  - platform: state
+    entity_id:
+    - input_boolean.sleep_in
+    to: 'on'
+    id: sleep-in_on
+  condition: []
+  action:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: 'off'
+      sequence:
+      - service: input_boolean.turn_off
+        data: {}
+        target:
+          entity_id: input_boolean.sleep_in
+    - conditions:
+      - condition: trigger
+        id: sleep-in_on
+      sequence:
+      - service: input_boolean.turn_on
+        data: {}
+        target:
+          entity_id: input_boolean.sleep
+      - service: scene.turn_on
+        data: {}
+        target:
+          entity_id: scene.goodnight
+  mode: single
+- id: '1703815440103'
+  alias: M_tv
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - binary_sensor.lumi_1
+    to: 'on'
+  condition:
+  - condition: state
+    entity_id: binary_sensor.presence_sensor_fp2_2585_presence_sensor_2
+    state: 'off'
+  - condition: state
+    entity_id: binary_sensor.presence_sensor_fp2_2585_presence_sensor_4
+    state: 'off'
+  - condition: state
+    entity_id: media_player.bedroom_tv
+    state: playing
+  action:
+  - service: media_player.media_pause
+    data: {}
+    target:
+      entity_id: media_player.bedroom_tv
+  mode: single
+- id: '1703815695183'
+  alias: M_desk
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - binary_sensor.presence_sensor_fp2_2585_presence_sensor_2
+    id: detected
+    to: 'on'
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 1
+  - platform: state
+    entity_id:
+    - binary_sensor.presence_sensor_fp2_2585_presence_sensor_2
+    id: clear
+    to: 'off'
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 5
+  condition:
+  - condition: state
+    entity_id: input_boolean.sleep
+    state: 'off'
+  action:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: detected
+      sequence:
+      - service: light.turn_on
+        data:
+          transition: 6
+          brightness_pct: '{{states(''sensor.motion_lights'')}}'
+        target:
+          entity_id:
+          - light.desk_strip
+        enabled: true
+    - conditions:
+      - condition: trigger
+        id: clear
+      sequence:
+      - service: light.turn_on
+        data:
+          transition: 6
+          brightness_pct: '{{states(''sensor.clear_lights'')}}'
+        target:
+          entity_id:
+          - light.desk_strip
+        enabled: true
+  mode: single
+- id: '1703815949841'
+  alias: M_bed
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - binary_sensor.presence_sensor_fp2_2585_presence_sensor_3
+    id: detected
+    to: 'on'
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 0
+  - platform: state
+    entity_id:
+    - binary_sensor.presence_sensor_fp2_2585_presence_sensor_3
+    id: clear
+    to: 'off'
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 5
+  condition:
+  - condition: state
+    entity_id: input_boolean.sleep
+    state: 'off'
+  - condition: not
+    conditions:
+    - condition: state
+      entity_id: media_player.bedroom_tv
+      state: playing
+  action:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: detected
+      sequence:
+      - service: light.turn_on
+        data:
+          transition: 6
+          brightness_pct: '{{states(''sensor.motion_lights'')}}'
+        target:
+          entity_id:
+          - light.bed_strip
+          - light.bedside_lamp
+    - conditions:
+      - condition: trigger
+        id: clear
+      sequence:
+      - service: light.turn_on
+        data:
+          transition: 10
+          brightness_pct: '{{states(''sensor.clear_lights'')}}'
+        target:
+          entity_id:
+          - light.bed_strip
+          - light.bedside_lamp
+  mode: single
+- id: '1703819355404'
+  alias: subwoofer_check
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - switch.subwoofer
+    to: 'on'
+  condition:
+  - condition: state
+    entity_id: media_player.bedroom
+    state: 'off'
+  action:
+  - service: switch.turn_off
+    data: {}
+    target:
+      entity_id: switch.subwoofer
+  mode: single
+- id: '1703819476227'
+  alias: cover_clear
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - binary_sensor.presence_sensor_fp2_2585_presence_sensor_1
+    to: 'off'
+    for:
+      hours: 0
+      minutes: 10
+      seconds: 0
+    id: clear
+  condition: []
+  action:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: clear
+      - condition: sun
+        before: sunset
+        after: sunrise
+      sequence:
+      - service: cover.open_cover
+        data: {}
+        target:
+          entity_id: cover.blinds
+  mode: single
+- id: '1703822694957'
+  alias: M_tv-resume
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - binary_sensor.presence_sensor_fp2_2585_presence_sensor_5
+    to: 'off'
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 7
+  condition:
+  - condition: state
+    entity_id: binary_sensor.presence_sensor_fp2_2585_presence_sensor_4
+    state: 'off'
+  - condition: state
+    entity_id: binary_sensor.presence_sensor_fp2_2585_presence_sensor_2
+    state: 'off'
+  - condition: state
+    entity_id: media_player.bedroom_tv
+    state: paused
+  - condition: state
+    entity_id: binary_sensor.presence_sensor_fp2_2585_presence_sensor_3
+    state: 'on'
+  action:
+  - service: media_player.media_play
+    data: {}
+    target:
+      entity_id: media_player.bedroom_tv
+  mode: single
+- id: '1703879950869'
+  alias: M_else
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - binary_sensor.presence_sensor_fp2_2585_presence_sensor_5
+    to: 'on'
+    id: detected
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 1
+  - platform: state
+    entity_id:
+    - binary_sensor.presence_sensor_fp2_2585_presence_sensor_5
+    to: 'off'
+    id: clear
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 5
+  condition:
+  - condition: state
+    entity_id: input_boolean.sleep
+    state: 'off'
+  - condition: not
+    conditions:
+    - condition: state
+      entity_id: media_player.bedroom_tv
+      state: playing
+  action:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: detected
+      sequence:
+      - service: light.turn_on
+        data:
+          transition: 4
+          brightness_pct: '{{states(''sensor.motion_lights'') }}'
+        target:
+          entity_id:
+          - light.tv_lights
+    - conditions:
+      - condition: trigger
+        id: clear
+      sequence:
+      - service: light.turn_on
+        data:
+          transition: 7
+          brightness_pct: '{{states(''sensor.clear_lights'') }}'
+        target:
+          entity_id:
+          - light.tv_lights
+  mode: single
+- id: '1703918306647'
+  alias: M_else
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - binary_sensor.presence_sensor_fp2_2585_presence_sensor_5
+    to: 'on'
+    id: detected
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 2
+  - platform: state
+    entity_id:
+    - binary_sensor.presence_sensor_fp2_2585_presence_sensor_5
+    to: 'off'
+    id: clear
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 2
+  condition:
+  - condition: state
+    entity_id: input_boolean.sleep
+    state: 'off'
+  - condition: not
+    conditions:
+    - condition: state
+      entity_id: media_player.bedroom
+      state: playing
+  action:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: detected
+      sequence:
+      - service: light.turn_on
+        data:
+          brightness_pct: 100
+          transition: 7
+        target:
+          entity_id: light.tv_lights
+    - conditions:
+      - condition: trigger
+        id: ''
+      sequence:
+      - service: light.turn_on
+        data:
+          transition: 7
+          brightness_pct: 30
+        target:
+          entity_id: light.tv_lights
+  mode: single
+- id: '1704327001727'
+  alias: Override-off
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - input_boolean.override
+    to: 'off'
+  condition:
+  - condition: state
+    entity_id: media_player.bedroom_tv
+    state: playing
+  action:
+  - service: light.turn_off
+    data: {}
+    target:
+      entity_id: light.bedroom_lights
+  - service: light.turn_on
+    data:
+      brightness_pct: 50
+    target:
+      entity_id: light.tv_lights
+  mode: single
